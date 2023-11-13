@@ -1,0 +1,357 @@
+---
+title: "hw8"
+author: "Menglu zhao"
+due: "11:59pm on 11/15/2023"
+output:
+  html_document:
+    toc: yes
+    toc_depth: 2
+    toc_float: yes
+    fig_height: 4.5
+    fig_width: 4.5
+  pdf_document:
+    fig_height: 3.5
+    fig_width: 3.5
+  word_document:
+    toc: no
+editor_options: 
+  markdown: 
+    wrap: sentence
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+nhData <- read_csv('nhData.csv')
+```
+
+## Question 1. Simulation to determine the probability of a Type I error: equal means and variances.
+
+### Question 1a type I error
+
+```{r}
+set.seed(123)  # Set a seed for reproducibility
+type1_error_anova1 <- type1_error_welch1 <- type1_error_kruskal1 <- 0
+
+for (i in 1:10000) {
+  group1 <- rnorm(15, mean = 50, sd = sqrt(7))
+  group2 <- rnorm(15, mean = 50, sd = sqrt(7))
+  group3 <- rnorm(15, mean = 50, sd = sqrt(7))
+
+  data <- data.frame(values = c(group1, group2, group3), 
+                     group = factor(rep(1:3, each = n)))
+  # ANOVA Test
+  if (anova(lm(values ~ group, data = data))$`Pr(>F)`[1] < 0.05) {
+    type1_error_anova1 <- type1_error_anova1 + 1
+  }
+
+  # Welch Test
+  if (oneway.test(values ~ group, data = data, var.equal = FALSE)$p.value < 0.05) {
+    type1_error_welch1 <- type1_error_welch1 + 1
+  }
+
+  # Kruskal-Wallis Test
+  if (kruskal.test(values ~ group, data = data)$p.value < 0.05) {
+    type1_error_kruskal1 <- type1_error_kruskal1 + 1
+  }
+}
+
+cat("probability of making a Type I error by performing ANOVA test",type1_error_anova1 / 10000,"\n")
+cat("probability of making a Type I error by performing Welch test ",type1_error_welch1 / 10000,"\n")
+cat("probability of making a Type I error by performing Kruskal-Wallis",type1_error_kruskal1 / 10000,"\n")
+```
+
+### Question 1b
+
+The probability we get from ANOVA (p=0.0486) Welch test(p=0.0476) and Kruskal-Wallis(p=0.0501) are really close to each other, and they are all less than the level of significance (alpha=0.05). This is what we want, since type I error occur when when the null hypothesis is true, but the statistical test incorrectly rejects it, since we have equal mean and variance across the groups(null is true), but the p value we get indicate that we reject the null -> type I error exists. 
+A smaller alpha means a lower probability of a Type I error.
+
+## Question 2. Simulation to determine the probability of a Type I error: unequal variances
+
+### Question 2a
+
+```{r}
+set.seed(123)
+type1_error_anova2 <- type1_error_welch2 <- type1_error_kruskal2 <- 0
+
+for (i in 1:10000) {
+  group1 <- rnorm(15, mean = 50, sd = sqrt(7))
+  group2 <- rnorm(15, mean = 50, sd = sqrt(2.5))
+  group3 <- rnorm(15, mean = 50, sd = sqrt(10))
+
+  data <- data.frame(values = c(group1, group2, group3), 
+                     group = factor(rep(1:3, each = n)))
+
+  # ANOVA Test
+  if (anova(lm(values ~ group, data = data))$`Pr(>F)`[1] < 0.05) {
+    type1_error_anova2 <- type1_error_anova2 + 1
+  }
+
+  # Welch Test
+  if (oneway.test(values ~ group, data = data, var.equal = FALSE)$p.value < 0.05) {
+    type1_error_welch2 <- type1_error_welch2 + 1
+  }
+
+  # Kruskal-Wallis Test
+  if (kruskal.test(values ~ group, data = data)$p.value < 0.05) {
+    type1_error_kruskal2 <- type1_error_kruskal2 + 1
+  }
+}
+
+cat("probability of making a Type I error by performing ANOVA test",type1_error_anova2 / 10000,"\n")
+cat("probability of making a Type I error by performing Welch test ",type1_error_welch2 / 10000,"\n")
+cat("probability of making a Type I error by performing Kruskal-Wallis",type1_error_kruskal2 / 10000,"\n")
+```
+
+### Question 2b
+
+The probability of making a Type I error by performing any of the three test are close to each other. And are around the significance level(0.05), this result is what we will expect since all three tests are being compared at the same level of significance,and the type I error is related to the chosen significance level. 
+
+## Question 3. Simulation to determine the probability of a Type I error:
+
+### Question 3a
+
+```{r}
+set.seed(1234)
+type1_error_anova3 <- type1_error_welch3 <- type1_error_kruskal3 <- 0
+
+for (i in 1:10000) {
+  group1 <- rexp(15, rate = 0.5)
+  group2 <- rexp(15, rate = 0.5)
+  group3 <- rexp(15, rate = 0.5)
+
+  data <- data.frame(values = c(group1, group2, group3), 
+                     group = factor(rep(1:3, each = n)))
+
+  # ANOVA Test
+  if (anova(lm(values ~ group, data = data))$`Pr(>F)`[1] < 0.05) {
+    type1_error_anova3 <- type1_error_anova3 + 1
+  }
+
+  # Welch Test
+  if (oneway.test(values ~ group, data = data, var.equal = FALSE)$p.value < 0.05) {
+    type1_error_welch3 <- type1_error_welch3 + 1
+  }
+
+  # Kruskal-Wallis Test
+  if (kruskal.test(values ~ group, data = data)$p.value < 0.05) {
+    type1_error_kruskal3 <- type1_error_kruskal3 + 1
+  }
+}
+
+cat("probability of making a Type I error by performing ANOVA test",type1_error_anova3 / 10000,"\n")
+cat("probability of making a Type I error by performing Welch test ",type1_error_welch3 / 10000,"\n")
+cat("probability of making a Type I error by performing Kruskal-Wallis",type1_error_kruskal3 /10000,"\n")
+```
+
+### Question 3b
+
+The three probability of making a Type I error are close to each other and close to 0.05, this is the result we are expecting to get.
+
+## Question 4. Simulation to determine the probability of a Type II error:
+
+### Question 4a
+
+```{r}
+set.seed(123)
+type2_error_anova4 <- type2_error_welch4 <- type2_error_kruskal4 <- 0
+
+for (i in 1:10000) {
+  group1 <- rnorm(15, mean = 50, sd = sqrt(7))
+  group2 <- rnorm(15, mean = 54, sd = sqrt(7))  # Different mean
+  group3 <- rnorm(15, mean = 50, sd = sqrt(7))
+
+  data <- data.frame(values = c(group1, group2, group3), 
+                     group = factor(rep(1:3, each = n)))
+  # ANOVA Test
+  if (anova(lm(values ~ group, data = data))$`Pr(>F)`[1] >= 0.025) {
+    type2_error_anova4 <- type2_error_anova4 + 1
+  }
+
+  # Welch Test
+  if (oneway.test(values ~ group, data = data, var.equal = FALSE)$p.value >= 0.025) {
+    type2_error_welch4 <- type2_error_welch4 + 1
+  }
+
+  # Kruskal-Wallis Test
+  if (kruskal.test(values ~ group, data = data)$p.value >= 0.025) {
+    type2_error_kruskal4 <- type2_error_kruskal4 + 1
+  }
+}
+
+cat("probability of making a Type II error by performing ANOVA test",type2_error_anova4 / 10000,"\n")
+cat("probability of making a Type II error by performing Welch test ",type2_error_welch4 / 10000,"\n")
+cat("probability of making a Type II error by performing Kruskal-Wallis",type2_error_kruskal4 / 10000,"\n")
+```
+
+### Question 4b
+
+The probabilities of making a Type II error for all three test is high and this is what we would expect because the alpha level is 0.025, with a small alpha level you will except a high probability to get a type II error, also small sample size will result in a high probability of type II error.
+
+## Question 5. Simulation to determine the probability of a Type II error:
+
+### Question 5a
+
+```{r}
+set.seed(123)
+type2_error_anova5 <- type2_error_welch5 <- type2_error_kruskal5 <- 0
+
+for (i in 1:10000) {
+  group1 <- rnorm(15, mean = 50, sd = sqrt(7))
+  group2 <- rnorm(15, mean = 54, sd = sqrt(3))  # Different mean
+  group3 <- rnorm(15, mean = 50, sd = sqrt(10))
+
+  data <- data.frame(values = c(group1, group2, group3), 
+                     group = factor(rep(1:3, each = n)))
+
+  # Perform tests and count failures to reject the null hypothesis
+  # ANOVA Test
+  if (anova(lm(values ~ group, data = data))$`Pr(>F)`[1] >= 0.025) {
+    type2_error_anova5 <- type2_error_anova5 + 1
+  }
+
+  # Welch Test
+  if (oneway.test(values ~ group, data = data, var.equal = FALSE)$p.value >= 0.025) {
+    type2_error_welch5 <- type2_error_welch5 + 1
+  }
+
+  # Kruskal-Wallis Test
+  if (kruskal.test(values ~ group, data = data)$p.value >= 0.025) {
+    type2_error_kruskal5 <- type2_error_kruskal5 + 1
+  }
+}
+
+cat("probability of making a Type II error by performing ANOVA test",type2_error_anova5 / 10000,"\n")
+cat("probability of making a Type II error by performing Welch test ",type2_error_welch5 / 10000,"\n")
+cat("probability of making a Type II error by performing Kruskal-Wallis",type2_error_kruskal5 / 10000,"\n")
+
+```
+
+### Question 5b
+
+Same as 4b, the result is not surprise since we are using a small significance level. probability of making a Type II error by performing any of the three test (anova, welch, kruskal_wallis) is high.
+
+## Question 6. Simulation to determine the probability of a Type II error:
+
+```{r}
+set.seed(123)
+type2_error_anova6 <- type2_error_welch6 <- type2_error_kruskal6 <- 0
+
+for (i in 1:10000) {
+  group1 <- rnorm(15, mean = 50, sd = sqrt(7))
+  group2 <- rnorm(15, mean = 54, sd = sqrt(3))  # Different mean
+  group3 <- rnorm(15, mean = 50, sd = sqrt(10))
+
+  data <- data.frame(values = c(group1, group2, group3), 
+                     group = factor(rep(1:3, each = n)))
+
+  # Perform tests and count failures to reject the null hypothesis
+  # ANOVA Test
+  if (anova(lm(values ~ group, data = data))$`Pr(>F)`[1] >= 0.025) {
+    type2_error_anova6 <- type2_error_anova6 + 1
+  }
+
+  # Welch Test
+  if (oneway.test(values ~ group, data = data, var.equal = FALSE)$p.value >= 0.025) {
+    type2_error_welch6 <- type2_error_welch6 + 1
+  }
+
+  # Kruskal-Wallis Test
+  if (kruskal.test(values ~ group, data = data)$p.value >= 0.025) {
+    type2_error_kruskal6 <- type2_error_kruskal6 + 1
+  }
+}
+
+cat("probability of making a Type II error by performing ANOVA test",type2_error_anova6 / 10000,"\n")
+cat("probability of making a Type II error by performing Welch test ",type2_error_welch6 / 10000,"\n")
+cat("probability of making a Type II error by performing Kruskal-Wallis",type2_error_kruskal6 / 10000,"\n")
+```
+
+### Question 6b
+
+The probabilities of making a Type II error for all three test is high in all three test and this is what we would expect because the alpha level is 0.025, with a small alpha level you will except a high probability to get a type II error, also small sample size will result in a high probability of type II error.
+
+## Question 7. NHANES data analysis: BMI and general health
+
+### Question 7a plot of BMI by the participant’s rating of her/his health in general
+
+Large amount of people will rate their health condition as fair or good, there exist outliars in 'excellent', 'poor', 'Vgood'.
+```{r}
+health_categories <- unique(nhData$HealthGen)
+
+for (category in health_categories) {
+  cat("Shapiro-Wilk test for Health Category:", category, "\n")
+  print(shapiro.test(nhData$BMI[nhData$HealthGen == category]))
+}
+
+for (category in health_categories) {
+  cat("QQ plot for Health Category:", category, "\n")
+  qqnorm(nhData$BMI[nhData$HealthGen == category], main = paste("QQ Plot -", category))
+  qqline(nhData$BMI[nhData$HealthGen == category], col = "red")
+}
+
+ggplot(nhData, aes(x = HealthGen, y = BMI)) +
+  geom_boxplot() +
+  labs(title = "BMI by Health Rating", x = "Health Rating", y = "BMI")
+
+```
+
+
+### Question 7b
+
+By performing the normality test, we get a mixed results on normality, we will want to use Kruskal-Wallis test. Which is a non-parametric method that does not require the assumption of normality, making it suitable for analyzing the differences in BMI across the health rating categories(more than two groups).
+
+### Question 7c
+
+H0: There is no statistically significant difference in the median BMI values across the different health rating.
+Ha:There is statistically significant difference in the median BMI values across the different health rating.
+Test statistics: Kruskal-Wallis chi-squared = 25.45
+P-value=4.067e-05 < 0.05, we fail to reject the null hypothesis, and concluded there is statistically significant difference in the median BMI values across the different health rating.
+
+```{r}
+kruskal_7<- kruskal.test(BMI ~ HealthGen, data = nhData)
+kruskal_7
+```
+
+
+## Question 8. NHANES data analysis: BMI and race
+
+### Question 8a plot of BMI by the participant’s race
+
+By the boxplot we can see that the median BMI across the different race group are close to each other.
+
+```{r}
+health_categories <- unique(nhData$Race1)
+
+for (category in health_categories) {
+  cat("Shapiro-Wilk test for Health Category:", category, "\n")
+  print(shapiro.test(nhData$BMI[nhData$Race1 == category]))
+}
+
+for (category in health_categories) {
+  cat("QQ plot for Health Category:", category, "\n")
+  qqnorm(nhData$BMI[nhData$Race1 == category], main = paste("QQ Plot -", category))
+  qqline(nhData$BMI[nhData$Race1 == category], col = "red")
+}
+ggplot(nhData, aes(x = Race1, y = BMI)) +
+  geom_boxplot() +
+  labs(title = "BMI Distribution by Race", x = "Race", y = "BMI")
+
+```
+
+### Question 8b
+
+Given these results, the Kruskal-Wallis test is the most appropriate choice. This test is a non-parametric alternative to ANOVA and does not assume normal distribution of the data.
+
+H0: There is no statistically significant difference in the median BMI values across the different race group.
+Ha:There is statistically significant difference in the median BMI values across the different race group.
+test statistics:Kruskal-Wallis chi-squared = 3.7852
+p-value: 0.4359 > 0.05, we fail to reject the null hypothesis and there is no statistically significant difference in the median BMI values across the different race group.
+
+```{r}
+kruskal_8<- kruskal.test(BMI ~ Race1, data = nhData)
+kruskal_8
+```
+
